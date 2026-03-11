@@ -10,8 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        heading: ["var(--font-heading)", "sans-serif"],
-        body: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
+        heading: ["'Barlow Condensed'", "sans-serif"],
+        body: ["'Inter'", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
