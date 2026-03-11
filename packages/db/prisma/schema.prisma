@@ -1,0 +1,262 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum BusinessType {
+  KAYAK_CANOE
+  HIKING_TOURS
+  CAMPING_RV
+  OTHER
+}
+
+enum FallbackBehavior {
+  TAKE_MESSAGE
+  TRANSFER
+  AI_DECIDES
+}
+
+enum CallOutcome {
+  FAQ
+  RESERVATION
+  MESSAGE
+  TRANSFER
+  ABANDONED
+}
+
+enum ReservationPlatform {
+  FAREHARBOR
+  REZDY
+  CAMPSPOT
+  GOOGLE_CALENDAR
+  GENERIC
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  PENDING
+  CANCELLED
+  FAILED
+}
+
+enum MessageStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum KBSource {
+  MANUAL
+  WEBSITE
+  DOCUMENT
+}
+
+enum UsageType {
+  CALL_MINUTES
+  RESERVATION_BOOKED
+  MESSAGE_TAKEN
+  PHONE_NUMBER
+}
+
+// ---------------------------------------------------------------------------
+// Core models
+// ---------------------------------------------------------------------------
+
+model Business {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clerkOrgId String @unique
+
+  name     String
+  type     BusinessType
+  timezone String       @default("America/New_York")
+
+  // Telephony
+  phoneNumber          String? // The number callers dial
+  twilioPhoneNumberSid String? // Set when we provision the number; null if forwarded
+
+  // Agent config
+  operatingHours   Json?   // { monday: { open: "09:00", close: "17:00", closed: false }, ... }
+  agentGreeting    String?
+  agentVoiceId     String? // ElevenLabs voice ID
+  fallbackBehavior FallbackBehavior @default(TAKE_MESSAGE)
+  recordingEnabled Boolean          @default(false)
+
+  onboardingComplete Boolean @default(false)
+
+  // Relations
+  calls              Call[]
+  reservations       Reservation[]
+  messages           Message[]
+  knowledgeBase      KnowledgeBaseEntry[]
+  transferNumbers    TransferNumber[]
+  integrationConfig  IntegrationConfig?
+  notificationConfig NotificationConfig?
+  billingAccount     BillingAccount?
+}
+
+model Call {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  callerNumber  String
+  twilioCallSid String? @unique
+
+  startedAt    DateTime
+  endedAt      DateTime?
+  durationSecs Int?
+
+  outcome      CallOutcome?
+  transcript   String?      @db.Text
+  summary      String?      @db.Text
+  recordingUrl String?
+
+  reservation Reservation?
+  message     Message?
+}
+
+model Reservation {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  callId String? @unique
+  call   Call?   @relation(fields: [callId], references: [id])
+
+  // External system reference
+  externalId String?
+  platform   ReservationPlatform
+
+  // Booking details
+  activity      String
+  date          DateTime
+  partySize     Int
+  customerName  String
+  customerPhone String
+  customerEmail String?
+  notes         String?
+
+  status ReservationStatus @default(CONFIRMED)
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  callId String? @unique
+  call   Call?   @relation(fields: [callId], references: [id])
+
+  callerName   String?
+  callerPhone  String
+  callbackTime String?
+  summary      String   @db.Text
+  transcript   String?  @db.Text
+
+  status MessageStatus @default(NEW)
+}
+
+model KnowledgeBaseEntry {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  question String
+  answer   String   @db.Text
+  source   KBSource @default(MANUAL)
+
+  // pgvector embedding — text-embedding-3-small produces 1536 dims
+  embedding Unsupported("vector(1536)")?
+
+  @@index([businessId])
+}
+
+model TransferNumber {
+  id        String @id @default(cuid())
+  businessId String
+  business  Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  label    String // e.g. "Owner's Cell", "Front Desk"
+  number   String
+  priority Int    @default(0)
+}
+
+model IntegrationConfig {
+  id        String @id @default(cuid())
+  businessId String @unique
+  business  Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  platform   ReservationPlatform
+  apiKey     String?
+  apiSecret  String?
+  companyId  String? // e.g. FareHarbor company shortname
+  webhookUrl String?
+  extra      Json? // Platform-specific fields
+}
+
+model NotificationConfig {
+  id        String @id @default(cuid())
+  businessId String @unique
+  business  Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  smsNumbers     String[] // E.164 format
+  emailAddresses String[]
+  dailyDigest    Boolean  @default(false)
+}
+
+// ---------------------------------------------------------------------------
+// Billing
+// ---------------------------------------------------------------------------
+
+model BillingAccount {
+  id        String @id @default(cuid())
+  businessId String @unique
+  business  Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  stripeCustomerId String?
+
+  creditBalance         Float   @default(0) // USD
+  autoRecharge          Boolean @default(false)
+  autoRechargeThreshold Float   @default(10)
+  autoRechargeAmount    Float   @default(50)
+
+  usageRecords UsageRecord[]
+}
+
+model UsageRecord {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  billingAccountId String
+  billingAccount   BillingAccount @relation(fields: [billingAccountId], references: [id])
+
+  type      UsageType
+  quantity  Float // minutes for CALL_MINUTES, count for others
+  unitCost  Float // USD per unit
+  totalCost Float // USD
+
+  callId      String?
+  description String?
+}

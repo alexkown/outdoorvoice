@@ -1,0 +1,32 @@
+{
+  "name": "@outdoorvoice/voice-agent",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@deepgram/sdk": "^3.9.0",
+    "@outdoorvoice/db": "workspace:*",
+    "@outdoorvoice/types": "workspace:*",
+    "bullmq": "^5.34.6",
+    "fastify": "^5.2.0",
+    "@fastify/websocket": "^11.0.1",
+    "@fastify/formbody": "^8.0.1",
+    "openai": "^4.77.0",
+    "twilio": "^5.3.7",
+    "ioredis": "^5.4.1",
+    "resend": "^4.0.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
