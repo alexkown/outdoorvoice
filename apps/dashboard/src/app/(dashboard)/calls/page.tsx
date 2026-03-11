@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,13 +45,13 @@ interface CallDetail extends Call {
 
 const OUTCOMES = ["FAQ", "RESERVATION", "MESSAGE", "TRANSFER", "ABANDONED"];
 
-const OUTCOME_COLORS: Record<string, string> = {
-  FAQ: "secondary",
-  RESERVATION: "default",
-  MESSAGE: "outline",
-  TRANSFER: "secondary",
-  ABANDONED: "destructive",
-} as const;
+const OUTCOME_BADGE_CLASS: Record<string, string> = {
+  FAQ: "bg-sky-100 text-sky-800 border-sky-200",
+  RESERVATION: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  MESSAGE: "bg-amber-100 text-amber-800 border-amber-200",
+  TRANSFER: "bg-violet-100 text-violet-800 border-violet-200",
+  ABANDONED: "bg-red-100 text-red-800 border-red-200",
+};
 
 const OUTCOME_LABELS: Record<string, string> = {
   FAQ: "FAQ",
@@ -61,6 +60,14 @@ const OUTCOME_LABELS: Record<string, string> = {
   TRANSFER: "Transfer",
   ABANDONED: "Abandoned",
 };
+
+function OutcomeBadge({ outcome }: { outcome: string }) {
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${OUTCOME_BADGE_CLASS[outcome] ?? "bg-stone-100 text-stone-700 border-stone-200"}`}>
+      {OUTCOME_LABELS[outcome] ?? outcome}
+    </span>
+  );
+}
 
 export default function CallsPage() {
   const [calls, setCalls] = useState<Call[]>([]);
@@ -92,7 +99,6 @@ export default function CallsPage() {
     fetchCalls();
   }, [fetchCalls]);
 
-  // Reset to page 1 when filter changes
   useEffect(() => {
     setPage(1);
   }, [outcome]);
@@ -115,10 +121,14 @@ export default function CallsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Call Log</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-stone-900">Call Log</h1>
+          <p className="text-sm text-stone-500 mt-0.5">Every call your AI agent has handled</p>
+        </div>
         <Select value={outcome} onValueChange={setOutcome}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-44 bg-white border-stone-200">
             <SelectValue placeholder="All outcomes" />
           </SelectTrigger>
           <SelectContent>
@@ -132,108 +142,110 @@ export default function CallsPage() {
         </Select>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
+      {/* Table card */}
+      <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-stone-100">
+          <p className="text-sm font-semibold text-stone-700">
             {total} call{total !== 1 ? "s" : ""}
             {outcome !== "all" ? ` · ${OUTCOME_LABELS[outcome]}` : ""}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
-              Loading…
-            </div>
-          ) : calls.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Phone className="h-10 w-10 text-muted-foreground/40 mb-3" />
-              <p className="text-sm text-muted-foreground font-medium">No calls found</p>
-            </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Caller</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Outcome</TableHead>
-                    <TableHead>Summary</TableHead>
-                    <TableHead className="w-10" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {calls.map((call) => (
-                    <TableRow key={call.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(call)}>
-                      <TableCell className="font-mono text-sm">
-                        {formatPhone(call.callerNumber)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {formatRelative(new Date(call.startedAt))}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {call.durationSecs != null ? formatDuration(call.durationSecs) : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={OUTCOME_COLORS[call.outcome] as "default" | "secondary" | "destructive" | "outline" ?? "secondary"}>
-                          {OUTCOME_LABELS[call.outcome] ?? call.outcome}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
-                        {call.summary ?? "—"}
-                      </TableCell>
-                      <TableCell>
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          </p>
+        </div>
 
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t">
-                  <span className="text-sm text-muted-foreground">
-                    Page {page} of {totalPages}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 1}
-                      onClick={(e) => { e.stopPropagation(); setPage(p => p - 1); }}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page >= totalPages}
-                      onClick={(e) => { e.stopPropagation(); setPage(p => p + 1); }}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-16 text-stone-400 text-sm">
+            Loading…
+          </div>
+        ) : calls.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="h-14 w-14 rounded-2xl bg-stone-100 flex items-center justify-center mx-auto mb-4">
+              <Phone className="h-7 w-7 text-stone-300" />
+            </div>
+            <p className="text-sm font-medium text-stone-500">No calls found</p>
+          </div>
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-stone-50/50 hover:bg-stone-50/50">
+                  <TableHead className="text-stone-500 font-medium">Caller</TableHead>
+                  <TableHead className="text-stone-500 font-medium">Time</TableHead>
+                  <TableHead className="text-stone-500 font-medium">Duration</TableHead>
+                  <TableHead className="text-stone-500 font-medium">Outcome</TableHead>
+                  <TableHead className="text-stone-500 font-medium">Summary</TableHead>
+                  <TableHead className="w-10" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {calls.map((call) => (
+                  <TableRow
+                    key={call.id}
+                    className="cursor-pointer hover:bg-stone-50 border-stone-100"
+                    onClick={() => openDetail(call)}
+                  >
+                    <TableCell className="font-mono text-sm text-stone-700">
+                      {formatPhone(call.callerNumber)}
+                    </TableCell>
+                    <TableCell className="text-sm text-stone-500 whitespace-nowrap">
+                      {formatRelative(new Date(call.startedAt))}
+                    </TableCell>
+                    <TableCell className="text-sm text-stone-500">
+                      {call.durationSecs != null ? formatDuration(call.durationSecs) : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <OutcomeBadge outcome={call.outcome} />
+                    </TableCell>
+                    <TableCell className="text-sm text-stone-500 max-w-xs truncate">
+                      {call.summary ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      <FileText className="h-4 w-4 text-stone-300" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-3 border-t border-stone-100 bg-stone-50/50">
+                <span className="text-sm text-stone-500">
+                  Page {page} of {totalPages}
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    className="border-stone-200"
+                    onClick={(e) => { e.stopPropagation(); setPage(p => p - 1); }}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    className="border-stone-200"
+                    onClick={(e) => { e.stopPropagation(); setPage(p => p + 1); }}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Transcript dialog */}
       <Dialog open={!!selectedCall} onOpenChange={(open) => { if (!open) setSelectedCall(null); }}>
         <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
-              <span>{selectedCall ? formatPhone(selectedCall.callerNumber) : ""}</span>
-              {selectedCall && (
-                <Badge variant={OUTCOME_COLORS[selectedCall.outcome] as "default" | "secondary" | "destructive" | "outline" ?? "secondary"}>
-                  {OUTCOME_LABELS[selectedCall.outcome] ?? selectedCall.outcome}
-                </Badge>
-              )}
+              <span className="font-mono">{selectedCall ? formatPhone(selectedCall.callerNumber) : ""}</span>
+              {selectedCall && <OutcomeBadge outcome={selectedCall.outcome} />}
             </DialogTitle>
             {selectedCall && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-stone-500">
                 {formatRelative(new Date(selectedCall.startedAt))}
                 {selectedCall.durationSecs != null && ` · ${formatDuration(selectedCall.durationSecs)}`}
               </p>
@@ -241,14 +253,14 @@ export default function CallsPage() {
           </DialogHeader>
 
           {selectedCall?.summary && (
-            <div className="rounded-md bg-muted px-4 py-3 text-sm">
+            <div className="rounded-xl bg-stone-50 border border-stone-200 px-4 py-3 text-sm text-stone-700">
               <span className="font-medium">Summary: </span>{selectedCall.summary}
             </div>
           )}
 
           <div className="flex-1 overflow-y-auto space-y-3 mt-2">
             {detailLoading ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Loading transcript…</p>
+              <p className="text-sm text-stone-400 text-center py-8">Loading transcript…</p>
             ) : selectedCall?.transcript && selectedCall.transcript.length > 0 ? (
               selectedCall.transcript.map((turn, i) => (
                 <div
@@ -256,10 +268,10 @@ export default function CallsPage() {
                   className={`flex gap-3 ${turn.role === "assistant" ? "flex-row" : "flex-row-reverse"}`}
                 >
                   <div
-                    className={`rounded-lg px-3 py-2 text-sm max-w-[80%] ${
+                    className={`rounded-2xl px-3.5 py-2.5 text-sm max-w-[80%] ${
                       turn.role === "assistant"
-                        ? "bg-secondary text-secondary-foreground"
-                        : "bg-primary text-primary-foreground ml-auto"
+                        ? "bg-stone-100 text-stone-800"
+                        : "bg-emerald-800 text-white ml-auto"
                     }`}
                   >
                     {turn.content}
@@ -267,14 +279,14 @@ export default function CallsPage() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-8">
+              <p className="text-sm text-stone-400 text-center py-8">
                 No transcript available for this call.
               </p>
             )}
           </div>
 
           {selectedCall?.recordingUrl && (
-            <div className="border-t pt-3">
+            <div className="border-t border-stone-100 pt-3">
               <audio controls src={selectedCall.recordingUrl} className="w-full h-9" />
             </div>
           )}

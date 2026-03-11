@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Phone, CalendarCheck, MessageSquare, TrendingUp, Radio } from "lucide-react";
 import { formatRelative } from "@/lib/utils";
 
@@ -35,12 +34,44 @@ const OUTCOME_LABELS: Record<string, string> = {
 };
 
 const OUTCOME_COLORS: Record<string, string> = {
-  FAQ: "bg-blue-100 text-blue-800",
-  RESERVATION: "bg-green-100 text-green-800",
-  MESSAGE: "bg-yellow-100 text-yellow-800",
-  TRANSFER: "bg-purple-100 text-purple-800",
+  FAQ: "bg-sky-100 text-sky-800",
+  RESERVATION: "bg-emerald-100 text-emerald-800",
+  MESSAGE: "bg-amber-100 text-amber-800",
+  TRANSFER: "bg-violet-100 text-violet-800",
   ABANDONED: "bg-red-100 text-red-800",
 };
+
+const OUTCOME_BAR: Record<string, string> = {
+  FAQ: "bg-sky-400",
+  RESERVATION: "bg-emerald-500",
+  MESSAGE: "bg-amber-400",
+  TRANSFER: "bg-violet-400",
+  ABANDONED: "bg-red-400",
+};
+
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  icon: React.ElementType;
+  note?: React.ReactNode;
+  iconBg?: string;
+  iconColor?: string;
+}
+
+function StatCard({ label, value, icon: Icon, note, iconBg = "bg-emerald-50", iconColor = "text-emerald-700" }: StatCardProps) {
+  return (
+    <div className="bg-white rounded-2xl border border-stone-200 p-6 flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-stone-500 font-medium">{label}</span>
+        <div className={`h-9 w-9 rounded-xl ${iconBg} flex items-center justify-center`}>
+          <Icon style={{ height: "18px", width: "18px" }} className={iconColor} />
+        </div>
+      </div>
+      <div className="text-4xl font-bold text-emerald-800 leading-none">{value}</div>
+      {note && <div className="text-xs">{note}</div>}
+    </div>
+  );
+}
 
 export default function OverviewPage() {
   const [stats, setStats] = useState<OverviewStats | null>(null);
@@ -66,7 +97,7 @@ export default function OverviewPage() {
 
   if (!stats) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
+      <div className="flex items-center justify-center h-64 text-stone-400 text-sm">
         Loading…
       </div>
     );
@@ -76,93 +107,87 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-6">
+      {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Overview</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-stone-900">Overview</h1>
+          <p className="text-sm text-stone-500 mt-0.5">Your AI agent&apos;s activity at a glance</p>
+        </div>
         <div className="flex items-center gap-3">
           {stats.activeCall && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 border border-green-200 text-green-800 text-sm font-medium">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium">
               <Radio className="h-3.5 w-3.5 animate-pulse" />
               Live call in progress
             </div>
           )}
           {lastUpdated && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-stone-400">
               Updated {formatRelative(lastUpdated)}
             </span>
           )}
         </div>
       </div>
 
+      {/* Active call banner */}
       {stats.activeCall && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-4 flex items-center gap-4">
-          <div className="h-3 w-3 rounded-full bg-green-500 animate-ping flex-shrink-0" />
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-center gap-4">
+          <div className="h-3 w-3 rounded-full bg-emerald-500 animate-ping flex-shrink-0" />
           <div>
-            <p className="font-medium text-green-900">
+            <p className="font-semibold text-emerald-900">
               Active call from {stats.activeCall.callerNumber}
             </p>
-            <p className="text-sm text-green-700">
+            <p className="text-sm text-emerald-600">
               Started {formatRelative(new Date(stats.activeCall.startedAt))}
             </p>
           </div>
         </div>
       )}
 
+      {/* Stat cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Calls Today</CardTitle>
-            <Phone className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.callsToday}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Bookings Today</CardTitle>
-            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.bookingsToday}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Messages Waiting</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats.messagesWaiting}</div>
-            {stats.messagesWaiting > 0 && (
-              <p className="text-xs text-amber-600 mt-1">Needs attention</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Resolution Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {stats.resolutionRate !== null ? `${stats.resolutionRate}%` : "—"}
-            </div>
-            {stats.resolutionRate !== null && (
-              <p className="text-xs text-muted-foreground mt-1">Without transfer or abandon</p>
-            )}
-          </CardContent>
-        </Card>
+        <StatCard
+          label="Calls Today"
+          value={stats.callsToday}
+          icon={Phone}
+        />
+        <StatCard
+          label="Bookings Today"
+          value={stats.bookingsToday}
+          icon={CalendarCheck}
+          iconBg="bg-amber-50"
+          iconColor="text-amber-600"
+        />
+        <StatCard
+          label="Messages Waiting"
+          value={stats.messagesWaiting}
+          icon={MessageSquare}
+          iconBg={stats.messagesWaiting > 0 ? "bg-amber-50" : "bg-stone-50"}
+          iconColor={stats.messagesWaiting > 0 ? "text-amber-600" : "text-stone-400"}
+          note={
+            stats.messagesWaiting > 0 ? (
+              <span className="text-amber-600 font-medium">Needs attention</span>
+            ) : (
+              <span className="text-stone-400">All clear</span>
+            )
+          }
+        />
+        <StatCard
+          label="Resolution Rate"
+          value={stats.resolutionRate !== null ? `${stats.resolutionRate}%` : "—"}
+          icon={TrendingUp}
+          note={
+            stats.resolutionRate !== null ? (
+              <span className="text-stone-400">Without transfer or abandon</span>
+            ) : undefined
+          }
+        />
       </div>
 
+      {/* Call breakdown */}
       {stats.outcomeBreakdown.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Call Breakdown Today</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="bg-white rounded-2xl border border-stone-200 p-6">
+          <h2 className="text-base font-semibold text-stone-900 mb-5">Call Breakdown Today</h2>
+          <div className="space-y-3">
             {[...stats.outcomeBreakdown]
               .sort((a, b) => b.count - a.count)
               .map((item) => {
@@ -170,32 +195,36 @@ export default function OverviewPage() {
                 return (
                   <div key={item.outcome} className="flex items-center gap-3">
                     <span
-                      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium w-24 justify-center ${
-                        OUTCOME_COLORS[item.outcome] ?? "bg-gray-100 text-gray-800"
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium w-24 justify-center ${
+                        OUTCOME_COLORS[item.outcome] ?? "bg-stone-100 text-stone-700"
                       }`}
                     >
                       {OUTCOME_LABELS[item.outcome] ?? item.outcome}
                     </span>
-                    <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-primary rounded-full"
+                        className={`h-full rounded-full transition-all ${OUTCOME_BAR[item.outcome] ?? "bg-stone-400"}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-sm w-16 text-right text-muted-foreground">
+                    <span className="text-sm w-16 text-right text-stone-500">
                       {item.count} ({pct}%)
                     </span>
                   </div>
                 );
               })}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
+      {/* Empty state */}
       {stats.callsToday === 0 && (
-        <div className="text-center py-16 text-muted-foreground">
-          <Phone className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No calls yet today. Your agent is ready.</p>
+        <div className="text-center py-20 text-stone-400">
+          <div className="h-14 w-14 rounded-2xl bg-stone-100 flex items-center justify-center mx-auto mb-4">
+            <Phone className="h-7 w-7 text-stone-300" />
+          </div>
+          <p className="text-sm font-medium text-stone-500">No calls yet today</p>
+          <p className="text-xs text-stone-400 mt-1">Your AI agent is ready and waiting</p>
         </div>
       )}
     </div>
