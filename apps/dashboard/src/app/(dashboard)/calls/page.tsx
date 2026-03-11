@@ -234,7 +234,7 @@ export default function CallsPage() {
             </DialogTitle>
             {selectedCall && (
               <p className="text-sm text-muted-foreground">
-                {formatRelative(selectedCall.startedAt)}
+                {formatRelative(new Date(selectedCall.startedAt))}
                 {selectedCall.durationSecs != null && ` · ${formatDuration(selectedCall.durationSecs)}`}
               </p>
             )}
