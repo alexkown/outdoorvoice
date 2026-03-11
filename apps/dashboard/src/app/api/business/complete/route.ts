@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@outdoorvoice/db";
+import { db, Prisma } from "@outdoorvoice/db";
 import { requireAuth } from "@/lib/business";
 
 const schema = z.object({
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       where: { clerkOrgId: userId },
     });
 
-    await db.$transaction(async (tx) => {
+    await db.$transaction(async (tx: Prisma.TransactionClient) => {
       // Update business fields
       await tx.business.update({
         where: { id: business.id },

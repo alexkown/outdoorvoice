@@ -58,8 +58,8 @@ export async function GET() {
     ]);
 
     // Resolution rate = calls NOT transferred/abandoned / total (skip zero denominator)
-    const abandoned = callsByOutcome.find((r) => r.outcome === "ABANDONED")?._count.outcome ?? 0;
-    const transferred = callsByOutcome.find((r) => r.outcome === "TRANSFER")?._count.outcome ?? 0;
+    const abandoned = callsByOutcome.find((r: { outcome: string | null; _count: { outcome: number } }) => r.outcome === "ABANDONED")?._count.outcome ?? 0;
+    const transferred = callsByOutcome.find((r: { outcome: string | null; _count: { outcome: number } }) => r.outcome === "TRANSFER")?._count.outcome ?? 0;
     const resolutionRate =
       totalCallsToday > 0
         ? Math.round(((totalCallsToday - abandoned - transferred) / totalCallsToday) * 100)
@@ -71,7 +71,7 @@ export async function GET() {
       messagesWaiting: messagesNew,
       resolutionRate,
       activeCall,
-      outcomeBreakdown: callsByOutcome.map((r) => ({
+      outcomeBreakdown: callsByOutcome.map((r: { outcome: string | null; _count: { outcome: number } }) => ({
         outcome: r.outcome,
         count: r._count.outcome,
       })),
