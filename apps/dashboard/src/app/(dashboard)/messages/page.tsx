@@ -69,7 +69,7 @@ function MessageCard({
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Badge variant={STATUS_BADGE[message.status]}>{STATUS_LABELS[message.status]}</Badge>
-          <span className="text-xs text-muted-foreground">{formatRelative(message.createdAt)}</span>
+          <span className="text-xs text-muted-foreground">{formatRelative(new Date(message.createdAt))}</span>
         </div>
         {nextStatus && nextLabel && (
           <Button size="sm" variant="outline" onClick={handleAdvance} disabled={loading} className="flex-shrink-0">

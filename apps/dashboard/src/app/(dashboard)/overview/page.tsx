@@ -87,7 +87,7 @@ export default function OverviewPage() {
           )}
           {lastUpdated && (
             <span className="text-xs text-muted-foreground">
-              Updated {formatRelative(lastUpdated.toISOString())}
+              Updated {formatRelative(lastUpdated)}
             </span>
           )}
         </div>
@@ -101,7 +101,7 @@ export default function OverviewPage() {
               Active call from {stats.activeCall.callerNumber}
             </p>
             <p className="text-sm text-green-700">
-              Started {formatRelative(stats.activeCall.startedAt)}
+              Started {formatRelative(new Date(stats.activeCall.startedAt))}
             </p>
           </div>
         </div>
