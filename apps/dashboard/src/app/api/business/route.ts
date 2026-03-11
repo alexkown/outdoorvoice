@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@outdoorvoice/db";
+import { db, Prisma } from "@outdoorvoice/db";
 import { requireAuth, getCurrentBusiness } from "@/lib/business";
 
 export async function GET() {
@@ -70,7 +70,7 @@ export async function PATCH(req: NextRequest) {
 
     const business = await db.business.update({
       where: { clerkOrgId: userId },
-      data: body,
+      data: body as Prisma.BusinessUpdateInput,
     });
 
     return NextResponse.json({ business });

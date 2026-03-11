@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
         where: { id: business.id },
         data: {
           onboardingComplete: true,
-          fallbackBehavior: body.fallbackBehavior,
+          ...(body.fallbackBehavior !== undefined && { fallbackBehavior: body.fallbackBehavior }),
         },
       });
 
@@ -82,13 +82,13 @@ export async function POST(req: NextRequest) {
           create: {
             businessId: business.id,
             platform: body.integrationPlatform,
-            apiKey: body.integrationApiKey,
-            companyId: body.integrationCompanyId,
+            ...(body.integrationApiKey !== undefined && { apiKey: body.integrationApiKey }),
+            ...(body.integrationCompanyId !== undefined && { companyId: body.integrationCompanyId }),
           },
           update: {
             platform: body.integrationPlatform,
-            apiKey: body.integrationApiKey,
-            companyId: body.integrationCompanyId,
+            ...(body.integrationApiKey !== undefined && { apiKey: body.integrationApiKey }),
+            ...(body.integrationCompanyId !== undefined && { companyId: body.integrationCompanyId }),
           },
         });
       }

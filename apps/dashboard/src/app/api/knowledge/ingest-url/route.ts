@@ -13,13 +13,12 @@ import * as cheerio from "cheerio";
 import Anthropic from "@anthropic-ai/sdk";
 import { requireAuth } from "@/lib/business";
 
-const anthropic = new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] });
-
 const schema = z.object({
   url: z.string().url(),
 });
 
 export async function POST(req: NextRequest) {
+  const anthropic = new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] });
   try {
     await requireAuth();
     const { url } = schema.parse(await req.json());

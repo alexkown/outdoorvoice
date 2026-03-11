@@ -7,9 +7,8 @@
 import OpenAI from "openai";
 import { db } from "@outdoorvoice/db";
 
-const openai = new OpenAI({ apiKey: process.env["OPENAI_API_KEY"] });
-
 export async function embedKBEntry(entryId: string): Promise<void> {
+  const openai = new OpenAI({ apiKey: process.env["OPENAI_API_KEY"] });
   const entry = await db.knowledgeBaseEntry.findUniqueOrThrow({ where: { id: entryId } });
   const text = `${entry.question}\n${entry.answer}`;
 
