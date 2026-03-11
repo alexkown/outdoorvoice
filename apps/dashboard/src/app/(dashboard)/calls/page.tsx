@@ -169,7 +169,7 @@ export default function CallsPage() {
                         {formatPhone(call.callerNumber)}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {formatRelative(call.startedAt)}
+                        {formatRelative(new Date(call.startedAt))}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {call.durationSecs != null ? formatDuration(call.durationSecs) : "—"}
