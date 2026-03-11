@@ -11,8 +11,7 @@ import {
   Settings,
   CreditCard,
   BookOpen,
-  Mountain,
-  Home,
+  Waves,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,29 +32,14 @@ export function Sidebar() {
     <aside className="flex h-screen w-60 flex-col bg-white border-r border-stone-100">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 h-16 border-b border-stone-100 flex-shrink-0">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-800">
-          <Mountain className="h-4 w-4 text-white" />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-700">
+          <Waves className="h-4 w-4 text-white" />
         </div>
         <span className="font-bold text-stone-900 tracking-tight">OutdoorVoice</span>
       </div>
 
-      {/* Home link */}
-      <div className="px-3 pt-3 pb-1">
-        <Link
-          href="/"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-stone-400 hover:bg-stone-50 hover:text-stone-700 transition-all duration-150"
-        >
-          <Home className="h-4 w-4 flex-shrink-0" />
-          Back to Home
-        </Link>
-      </div>
-
-      <div className="px-3 pb-2">
-        <div className="h-px bg-stone-100" />
-      </div>
-
       {/* Nav */}
-      <nav className="flex flex-1 flex-col gap-0.5 px-3 py-1 overflow-y-auto">
+      <nav className="flex flex-1 flex-col gap-0.5 px-3 py-4 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
@@ -84,14 +68,12 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* User / Sign out */}
-      <div className="border-t border-stone-100 flex-shrink-0">
-        <div className="flex items-center gap-3 px-5 py-4">
-          <UserButton afterSignOutUrl="/" />
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-medium text-stone-700 truncate">Account</span>
-            <span className="text-xs text-stone-400">Click to sign out</span>
-          </div>
+      {/* User */}
+      <div className="flex items-center gap-3 px-5 py-4 border-t border-stone-100 flex-shrink-0">
+        <UserButton afterSignOutUrl="/sign-in" />
+        <div className="flex flex-col min-w-0">
+          <span className="text-sm font-medium text-stone-700 truncate">Account</span>
+          <span className="text-xs text-stone-400">Manage profile</span>
         </div>
       </div>
     </aside>
