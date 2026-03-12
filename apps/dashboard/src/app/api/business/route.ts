@@ -25,8 +25,13 @@ const createSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  let userId: string;
   try {
-    const userId = await requireAuth();
+    userId = await requireAuth();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
     const body = createSchema.parse(await req.json());
 
     // Idempotent — if business already exists, return it
@@ -64,8 +69,13 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest) {
+  let userId: string;
   try {
-    const userId = await requireAuth();
+    userId = await requireAuth();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
     const body = patchSchema.parse(await req.json());
 
     const business = await db.business.update({

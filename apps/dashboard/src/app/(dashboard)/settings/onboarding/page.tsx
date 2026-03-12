@@ -370,7 +370,10 @@ export default function OnboardingPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: data.name, type: data.type, timezone: data.timezone }),
         });
-        if (!res.ok) throw new Error("Failed to save business info");
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({})) as { error?: string };
+          throw new Error(j.error ?? "Failed to save business info");
+        }
       }
 
       if (step === 2 && data.phoneMode === "provision" && data.selectedNumber) {

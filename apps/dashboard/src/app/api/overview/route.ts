@@ -16,7 +16,7 @@ export async function GET() {
       where: { clerkOrgId: userId },
       select: { id: true, timezone: true },
     });
-    if (!business) return NextResponse.json(emptyStats());
+    if (!business) return NextResponse.json({ error: "No business found" }, { status: 404 });
 
     // Start of today in the business's timezone
     const todayStr = new Date().toLocaleDateString("en-CA", {

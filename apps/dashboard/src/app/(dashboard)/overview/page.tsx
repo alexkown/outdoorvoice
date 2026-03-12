@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Phone, CalendarCheck, MessageSquare, TrendingUp, Radio } from "lucide-react";
 import { formatRelative } from "@/lib/utils";
@@ -43,8 +44,10 @@ const OUTCOME_COLORS: Record<string, string> = {
 };
 
 export default function OverviewPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<OverviewStats | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -52,17 +55,35 @@ export default function OverviewPage() {
       if (res.ok) {
         setStats(await res.json());
         setLastUpdated(new Date());
+      } else if (res.status === 404) {
+        router.replace("/settings/onboarding");
+      } else {
+        setLoadError(true);
       }
     } catch {
-      // silently keep stale data
+      setLoadError(true);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     fetchStats();
     const interval = setInterval(fetchStats, 30_000);
     return () => clearInterval(interval);
   }, [fetchStats]);
+
+  if (!stats && loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground text-sm">
+        <p>Unable to load overview data.</p>
+        <button
+          onClick={() => router.push("/settings/onboarding")}
+          className="text-primary underline"
+        >
+          Complete account setup
+        </button>
+      </div>
+    );
+  }
 
   if (!stats) {
     return (
