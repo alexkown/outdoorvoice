@@ -6,8 +6,14 @@ import { LandingPage } from "@/components/landing-page";
 export default async function HomePage() {
   const { userId } = await auth();
   if (userId) {
-    const business = await getCurrentBusiness();
-    redirect(business?.onboardingComplete ? "/overview" : "/settings/onboarding");
+    let onboardingComplete = false;
+    try {
+      const business = await getCurrentBusiness();
+      onboardingComplete = business?.onboardingComplete ?? false;
+    } catch {
+      // DB unavailable — fall through to onboarding
+    }
+    redirect(onboardingComplete ? "/overview" : "/settings/onboarding");
   }
   return <LandingPage />;
 }
